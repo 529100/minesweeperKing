@@ -1,7 +1,9 @@
 //index.js
 //获取应用实例
 var app = getApp()
-
+// 在Page配置中添加云数据库引用
+const db = wx.cloud.database()
+const scoresCollection = db.collection('scores')
 Page({
 
     data: {
@@ -42,16 +44,25 @@ Page({
         const scores = wx.getStorageSync('personalScores') || [];
         this.setData({ personalScores: scores.slice(0, 10) });
     },
-    // 加载好友成绩（示例数据）
+    // 修改加载好友排名方法
     loadFriendScores: function() {
-        // 实际应调用微信API获取好友数据，此处用模拟数据
-        const mockData = [
-            { name: "玩家1", bestTime: 45, isSelf: false },
-            { name: "小明", bestTime: 62, isSelf: false },
-            { name: "我的成绩", bestTime: 58, isSelf: true }
-        ].sort((a, b) => a.bestTime - b.bestTime);
-        
-        this.setData({ friendScores: mockData });
+        const self = this
+        wx.cloud.callFunction({
+            name: 'getFriendScores',
+            success: res => {
+                const data = res.result.data
+                const currentUser = wx.getStorageSync('openid')
+                const formatted = data.map(item => ({
+                    name: item.name,
+                    bestTime: item.time,
+                    isSelf: item._openid === currentUser
+            }))
+            self.setData({ friendScores: formatted })
+        },
+        fail: err => {
+            console.error('获取好友排名失败:', err)
+        }
+        })
     },
 
 
@@ -377,6 +388,20 @@ Page({
         if (this.data.gameMode === 'classic' || this.data.gameMode === 'timeChallenge') {
             this.saveScore(this.timesGo);
         }
+
+        // 弹出输入名称对话框
+        /*wx.showModal({
+            title: '上传成绩',
+            content: '请输入你的昵称（最多10个字）',
+            editable: true,
+            success(res) {
+            if (res.confirm && res.content) {
+                const name = res.content.substring(0, 10)
+                self.uploadScore(name)
+                }
+            }
+        })*/
+
     },
 
     failed: function(x, y) {
@@ -392,22 +417,91 @@ Page({
         this.endOfTheGame = true;
     },
 
-    // 保存个人成绩
-    saveScore: function(time) {
-        const newScore = {
+    // 在Page对象中添加以下方法
+showUploadDialog: function() {
+    const scores = wx.getStorageSync('personalScores') || [];
+    if (scores.length === 0) {
+        wx.showToast({
+            title: '暂无可上传的成绩',
+            icon: 'none'
+        });
+        return;
+    }
+    
+    const bestScore = scores.reduce((prev, current) => 
+        (prev.time < current.time) ? prev : current
+    );
+    
+    const self = this;
+    wx.showModal({
+        title: '上传最佳成绩',
+        content: `当前最佳成绩：${bestScore.time}秒`,
+        editable: true,
+        placeholderText: '输入展示名称（2-10字）',
+        success(res) {
+            if (res.confirm) {
+                const name = res.content.substring(0, 10).trim();
+                if (name.length < 2) {
+                    wx.showToast({
+                        title: '名称至少2个字',
+                        icon: 'none'
+                    });
+                    return;
+                }
+                self.uploadScore(name, bestScore.time);
+            }
+        }
+    });
+},
+
+// 修改后的上传方法
+uploadScore: function(name, time) {
+    scoresCollection.add({
+        data: {
+            name: name,
             time: time,
-            date: this.formatDate(new Date())
-        };
-        
-        let scores = wx.getStorageSync('personalScores') || [];
-        scores.push(newScore);
-        // 按时间排序并保留前10
-        scores.sort((a, b) => a.time - b.time);
-        scores = scores.slice(0, 10);
-        
-        wx.setStorageSync('personalScores', scores);
-        this.loadPersonalScores();
-    },
+            timestamp: db.serverDate(),
+            openid: wx.getStorageSync('openid')
+        },
+        success: () => {
+            wx.showToast({ title: '上传成功', icon: 'success' });
+            this.loadFriendScores();
+            // 更新本地记录为已上传状态（可选）
+            let scores = wx.getStorageSync('personalScores') || [];
+            scores = scores.map(score => {
+                if (score.time === time) {
+                    score.uploaded = true;
+                }
+                return score;
+            });
+            wx.setStorageSync('personalScores', scores);
+        },
+        fail: (err) => {
+            console.error('上传失败:', err);
+            wx.showToast({ title: '上传失败', icon: 'none' });
+        }
+    });
+},
+
+
+   
+
+    // 修改后的保存方法
+saveScore: function(time) {
+    const newScore = {
+        time: time,
+        date: this.formatDate(new Date()),
+        uploaded: false // 添加上传状态标识
+    };
+    
+    let scores = wx.getStorageSync('personalScores') || [];
+    scores.push(newScore);
+    scores.sort((a, b) => a.time - b.time);
+    scores = scores.slice(0, 10);
+    
+    wx.setStorageSync('personalScores', scores);
+    this.loadPersonalScores();
+},
 
     // 日期格式化
     formatDate: function(date) {

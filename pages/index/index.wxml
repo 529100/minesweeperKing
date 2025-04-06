@@ -50,7 +50,7 @@
         <view>
             <button class="start-button" type="primary" size="mini" bindtap="setGame" hover-class="button-hover">{{buttionText}}</button>
         </view>
-        <view>
+        <view>Switch
             <switch bindchange="flagSwitch"/>
         </view>
     </view>
@@ -112,22 +112,28 @@
 
     <!-- 个人排名列表 -->
     <scroll-view wx:if="{{currentRankTab === 'personal'}}" class="rank-list">
-        <view wx:for="{{personalScores}}" wx:key="index" class="rank-item">
-            <text class="rank">第{{index + 1}}名</text>
-            <text class="time">{{item.time}}秒</text>
-            <text class="date">{{item.date}}</text>
-        </view>
+        <!-- 修改后的个人排名项 -->
+<view wx:for="{{personalScores}}" wx:key="index" class="rank-item">
+    <text class="rank">NO.{{index + 1}}</text>
+    <text class="time">{{item.time}}秒 {{item.uploaded ? '✓' : ''}}</text>
+    <text class="date">{{item.date}}</text>
+</view>
         <view wx:if="{{personalScores.length === 0}}" class="no-data">暂无游戏记录</view>
+        
     </scroll-view>
-
+    <!-- 在个人排名列表下方添加上传按钮 -->
+<view wx:if="{{currentRankTab === 'personal'}}" class="upload-section">
+  <button class="upload-btn" bindtap="showUploadDialog">上传当前最佳成绩</button>
+</view>
     <!-- 好友排名列表 -->
     <scroll-view wx:else class="rank-list">
         <view wx:for="{{friendScores}}" wx:key="index" class="rank-item">
-            <image wx:if="{{item.isSelf}}" src="../images/self_icon.png" class="avatar"/>
+            
             <text class="name">{{item.name}}{{item.isSelf ? '(我)' : ''}}</text>
             <text class="time">{{item.bestTime}}秒</text>
         </view>
         <view wx:if="{{friendScores.length === 0}}" class="no-data">暂无好友数据</view>
+        
     </scroll-view>
 </view>
 

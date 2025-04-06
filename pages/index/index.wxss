@@ -291,11 +291,19 @@ page {
     color: #666;
 }
 
+/* 添加已上传标识样式 */
 .time {
-    flex: 1;
-    text-align: right;
     color: #3BAFDA;
     font-weight: bold;
+}
+.time::after {
+    content: '✓';
+    color: #4CAF50;
+    margin-left: 10rpx;
+    opacity: 0;
+}
+.time[data-uploaded="true"]::after {
+    opacity: 1;
 }
 
 .date {
@@ -321,4 +329,24 @@ page {
     text-align: center;
     color: #999;
     padding: 40rpx;
+}
+
+/* 上传按钮样式 */
+.upload-section {
+  margin-top: 40rpx;
+  padding: 0 30rpx;
+}
+
+.upload-btn {
+  width: 100%;
+  height: 80rpx;
+  line-height: 80rpx;
+  background: #3BAFDA;
+  color: white;
+  border-radius: 40rpx;
+  font-size: 28rpx;
+}
+
+.upload-btn:active {
+  background: #2d8ebd;
 }
