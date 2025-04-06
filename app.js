@@ -2,7 +2,7 @@
 App({
     onLaunch: function () {
       wx.cloud.init({
-        env: 'cloud1-7gejg5hw96d66783', // 替换为你的云环境ID
+        env: 'cloud1-0g4hyk71348512e3', // 替换为你的云环境ID
         traceUser: true
       })
     }
