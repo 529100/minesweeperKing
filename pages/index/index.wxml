@@ -1,0 +1,133 @@
+<!-- 主菜单界面 -->
+<view wx:if="{{showMainMenu}}" class="main-menu">
+    <view class="title">扫雷大王</view>
+    <button class="mode-btn" bindtap="selectMode" data-mode="classic">经典模式</button>
+    <button class="mode-btn" bindtap="selectMode" data-mode="timeChallenge">限时挑战</button>
+    <button class="mode-btn rank-btn" bindtap="showRanking">成绩排名</button>
+</view>
+
+
+<view wx:elif="{{!showRanking}}" class="wrapper">
+    <!-- 返回按钮 -->
+    <button class="back-button" bindtap="backToMainMenu">‹ 主菜单</button>
+    <view class="header">
+        <text class="label my-score">Mines Left: {{minesLeft}}</text>
+        <text class="label my-score">Used Time: {{timesGo}}</text>
+    </view>
+    <view wx:for="{{mineMap}}" wx:for-item="row" wx:for-index="i" class="flex-container">
+        <button 
+        wx:for="{{row}}" 
+        wx:for-item="col" 
+        wx:for-index="j" 
+        class="flex-item {{col < 9 ? (col < 0 ? '':'open') : ((col > 9) ? 'flag' : 'mine')}}" 
+        bindtap="demining" 
+        data-x="{{i}}" 
+        data-y="{{j}}" 
+        data-value="{{col}}">
+        
+    <!-- 爆炸地雷（bomb.png） -->
+    <block wx:if="{{col === 19}}">
+        <image src="../images/bomb.png" class="bomb-icon" />
+    </block>
+    <!-- 地雷图标 -->
+    <block wx:elif="{{col === 9}}">
+        <image src="../images/mine.png" class="mine-icon" />
+    </block>
+    <!-- 新增：旗帜图标 -->
+    <block wx:elif="{{col > 9}}">
+        <image src="../images/flag.png" class="flag-icon" />
+    </block>
+    
+    <!-- 其他情况显示数字 -->
+    <block wx:else>
+    <view class="num-container">
+        <text class="num num-{{col}}">{{col < 0 ? '' : col}}</text>
+    </view>
+</block>
+        </button>
+    </view>
+    <view class="footer">
+        <view>
+            <button class="start-button" type="primary" size="mini" bindtap="setGame" hover-class="button-hover">{{buttionText}}</button>
+        </view>
+        <view>
+            <switch bindchange="flagSwitch"/>
+        </view>
+    </view>
+    <!-- 添加模式选择 -->
+<view class="mode-selector">
+    <button 
+        class="mode-btn {{gameMode === 'classic' ? 'active' : ''}}" 
+        data-mode="classic" 
+        bindtap="switchMode"
+    >经典模式</button>
+    <button 
+        class="mode-btn {{gameMode === 'timeChallenge' ? 'active' : ''}}" 
+        data-mode="timeChallenge" 
+        bindtap="switchMode"
+    >限时挑战</button>
+</view>
+
+<!-- 限时模式时间输入 -->
+<view wx:if="{{gameMode === 'timeChallenge'}}" class="time-input">
+    输入限制时间:
+    <input
+        type="number" 
+        placeholder="输入时间(秒)" 
+        value="{{timeLimit}}" 
+        bindinput="setTimeLimit"
+    />
+</view>
+
+<!-- 仅在限时模式显示时间 -->
+<view class="header">
+    
+    <text wx:if="{{gameMode === 'timeChallenge'}}" class="label my-score">剩余时间: {{timesRest}}</text>
+</view>
+
+<view class="tips">
+    <text>- 点击 START 开始游戏，RESTART 重新开始\n- Switch 切换标志插旗</text>
+</view>
+</view>
+
+
+
+<!-- 排名界面 -->
+<view wx:else class="ranking-container">
+    <button class="back-button" bindtap="backToMainMenu">‹ 返回主菜单</button>
+    
+    <!-- 选项卡 -->
+    <view class="rank-tabs">
+        <button 
+            class="tab-btn {{currentRankTab === 'personal' ? 'active' : ''}}" 
+            bindtap="switchRankTab" 
+            data-tab="personal"
+        >个人排名</button>
+        <button 
+            class="tab-btn {{currentRankTab === 'friends' ? 'active' : ''}}" 
+            bindtap="switchRankTab" 
+            data-tab="friends"
+        >好友排名</button>
+    </view>
+
+    <!-- 个人排名列表 -->
+    <scroll-view wx:if="{{currentRankTab === 'personal'}}" class="rank-list">
+        <view wx:for="{{personalScores}}" wx:key="index" class="rank-item">
+            <text class="rank">第{{index + 1}}名</text>
+            <text class="time">{{item.time}}秒</text>
+            <text class="date">{{item.date}}</text>
+        </view>
+        <view wx:if="{{personalScores.length === 0}}" class="no-data">暂无游戏记录</view>
+    </scroll-view>
+
+    <!-- 好友排名列表 -->
+    <scroll-view wx:else class="rank-list">
+        <view wx:for="{{friendScores}}" wx:key="index" class="rank-item">
+            <image wx:if="{{item.isSelf}}" src="../images/self_icon.png" class="avatar"/>
+            <text class="name">{{item.name}}{{item.isSelf ? '(我)' : ''}}</text>
+            <text class="time">{{item.bestTime}}秒</text>
+        </view>
+        <view wx:if="{{friendScores.length === 0}}" class="no-data">暂无好友数据</view>
+    </scroll-view>
+</view>
+
