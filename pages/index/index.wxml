@@ -259,52 +259,62 @@
             class="tab-btn {{currentRankTab === 'friends' ? 'active' : ''}}" 
             bindtap="switchRankTab" 
             data-tab="friends"
-        >好友排名</button>
+        >玩家排名</button>
     </view>
 
     <!-- 个人排名列表 -->
-    <scroll-view wx:if="{{currentRankTab === 'personal'}}" class="rank-list">
-        <!-- 排名表头 -->
-        <view class="rank-header-row">
-            <text class="rank-header-cell">🏆 排名</text>
-            <text class="rank-header-cell">⏱️ 用时</text>
-            <text class="rank-header-cell">📅 日期</text>
-        </view>
-        
-        <!-- 修改后的个人排名项 -->
-        <view wx:for="{{personalScores}}" wx:key="index" class="rank-item">
-            <text class="rank">NO.{{index + 1}}</text>
-            <text class="time">{{item.time}}秒 <text wx:if="{{item.uploaded}}" class="verified-mark">✓</text></text>
-            <text class="date">{{item.date}}</text>
-        </view>
-        <view wx:if="{{personalScores.length === 0}}" class="no-data">
-            <image src="../images/icon/emoticon_sad.png" class="empty-icon"></image>
-            <text>暂无游戏记录</text>
-        </view>
-    </scroll-view>
+<scroll-view 
+    wx:if="{{currentRankTab === 'personal'}}" 
+    class="rank-list" 
+    scroll-y 
+    style="height: 1000rpx"
+>
+    <!-- 排名表头 -->
+    <view class="rank-header-row">
+        <text class="rank-header-cell">🏆 排名</text>
+        <text class="rank-header-cell">⏱️ 用时</text>
+        <text class="rank-header-cell">📅 日期</text>
+    </view>
     
-    <!-- 好友排名列表 -->
-    <scroll-view wx:else class="rank-list">
-        <!-- 排名表头 -->
-        <view class="rank-header-row">
-            <text class="rank-header-cell">🏆 排名</text>
-            <text class="rank-header-cell">👤 玩家</text>
-            <text class="rank-header-cell">⏱️ 最佳成绩</text>
+    <!-- 修改后的个人排名项 -->
+    <view wx:for="{{personalScores}}" wx:key="index" class="rank-item">
+        <text class="rank">NO.{{index + 1}}</text>
+        <text class="time">{{item.time}}秒 <text wx:if="{{item.uploaded}}" class="verified-mark">✓</text></text>
+        <text class="date">{{item.date}}</text>
+    </view>
+    <view wx:if="{{personalScores.length === 0}}" class="no-data">
+        <image src="../images/icon/emoticon_sad.png" class="empty-icon"></image>
+        <text>暂无游戏记录</text>
+    </view>
+</scroll-view>
+
+<!-- 好友排名列表 -->
+<scroll-view 
+    wx:else 
+    class="rank-list" 
+    scroll-y 
+    style="height: 1000rpx"
+>
+    <!-- 排名表头 -->
+    <view class="rank-header-row">
+        <text class="rank-header-cell">🏆 排名</text>
+        <text class="rank-header-cell">👤 玩家</text>
+        <text class="rank-header-cell">⏱️ 最佳成绩</text>
+    </view>
+    
+    <!-- 好友排名项 -->
+    <view wx:for="{{friendScores}}" wx:key="index" class="rank-item">
+        <text class="rank">NO.{{index + 1}}</text>
+        <view class="name-container">
+            <text class="name">{{item.name}}<text wx:if="{{item.isSelf}}">(我)</text></text>
         </view>
-        
-        <!-- 好友排名项 -->
-        <view wx:for="{{friendScores}}" wx:key="index" class="rank-item">
-            <text class="rank">NO.{{index + 1}}</text>
-            <view class="name-container">
-                <text class="name">{{item.name}}<text wx:if="{{item.isSelf}}">(我)</text></text>
-            </view>
-            <text class="time">{{item.bestTime}}秒</text>
-        </view>
-        <view wx:if="{{friendScores.length === 0}}" class="no-data">
-            <image src="../images/icon/emoticon_sad.png" class="empty-icon"></image>
-            <text>暂无好友记录</text>
-        </view>
-    </scroll-view>
+        <text class="time">{{item.bestTime}}秒</text>
+    </view>
+    <view wx:if="{{friendScores.length === 0}}" class="no-data">
+        <image src="../images/icon/emoticon_sad.png" class="empty-icon"></image>
+        <text>暂无好友记录</text>
+    </view>
+</scroll-view>
     
     <!-- 上传成绩按钮 -->
     <view class="upload-section">
