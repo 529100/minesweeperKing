@@ -1,102 +1,254 @@
-<!-- 主菜单界面 -->
+<!-- 主菜单页面 -->
 <view wx:if="{{showMainMenu}}" class="main-menu">
-    <view class="title">扫雷大王</view>
-    <button class="mode-btn" bindtap="selectMode" data-mode="classic">经典模式</button>
-    <button class="mode-btn" bindtap="selectMode" data-mode="timeChallenge">限时挑战</button>
-    <button class="mode-btn rank-btn" bindtap="showRanking">成绩排名</button>
-</view>
-
-
-<view wx:elif="{{!showRanking}}" class="wrapper">
-    <!-- 返回按钮 -->
-    <button class="back-button" bindtap="backToMainMenu">‹ 主菜单</button>
-    <view class="header">
-        <text class="label my-score">Mines Left: {{minesLeft}}</text>
-        <text class="label my-score">Used Time: {{timesGo}}</text>
+    <!-- 粒子效果 -->
+    <view class="particles">
+        <view wx:for="{{particles}}" wx:key="id" class="particle particle-{{item.id}}" wx:if="{{item.active}}"></view>
     </view>
-    <view wx:for="{{mineMap}}" wx:for-item="row" wx:for-index="i" class="flex-container">
-        <button 
-        wx:for="{{row}}" 
-        wx:for-item="col" 
-        wx:for-index="j" 
-        class="flex-item {{col < 9 ? (col < 0 ? '':'open') : ((col > 9) ? 'flag' : 'mine')}}" 
-        bindtap="demining" 
-        data-x="{{i}}" 
-        data-y="{{j}}" 
-        data-value="{{col}}">
-        
-    <!-- 爆炸地雷（bomb.png） -->
-    <block wx:if="{{col === 19}}">
-        <image src="../images/bomb.png" class="bomb-icon" />
-    </block>
-    <!-- 地雷图标 -->
-    <block wx:elif="{{col === 9}}">
-        <image src="../images/mine.png" class="mine-icon" />
-    </block>
-    <!-- 新增：旗帜图标 -->
-    <block wx:elif="{{col > 9}}">
-        <image src="../images/flag.png" class="flag-icon" />
-    </block>
     
-    <!-- 其他情况显示数字 -->
-    <block wx:else>
-    <view class="num-container">
-        <text class="num num-{{col}}">{{col < 0 ? '' : col}}</text>
+    <!-- 装饰小地雷图标 -->
+    <view class="decoration-mines">
+        <image src="../images/mine.png" class="deco-mine deco-mine-1"></image>
+        <image src="../images/mine.png" class="deco-mine deco-mine-2"></image>
+        <image src="../images/mine.png" class="deco-mine deco-mine-3"></image>
+        <image src="../images/mine.png" class="deco-mine deco-mine-4"></image>
     </view>
-</block>
+
+    <!-- 标题装饰 -->
+    <view class="title-decoration top"></view>
+    <view class="title-decoration bottom"></view>
+    
+    <!-- 旋转的地雷图标 -->
+    <view class="spinning-mine-container" bindtap="animateMine">
+        <view class="mine-glow"></view>
+        <image src="../images/mine.png" class="spinning-mine" animation="{{mineAnimationData}}"></image>
+    </view>
+    
+    <!-- 游戏标题 animation="{{animationData}}"-->
+    <view class="title" >扫雷大王</view>
+    
+    <!-- 游戏模式按钮 - 使用专门的样式类 -->
+    <view class="main-menu-buttons">
+        <button class="mode-btn classic-btn" bindtap="selectMode" data-mode="classic" animation="{{classicBtnAnimation}}">
+            <view class="btn-content">
+                <text class="btn-icon">🎮</text>
+                <text>经典模式</text>
+            </view>
+        </button>
+        
+        <button class="mode-btn time-btn" bindtap="selectMode" data-mode="timeChallenge" animation="{{timeBtnAnimation}}">
+            <view class="btn-content">
+                <text class="btn-icon">⏱️</text>
+                <text>限时挑战</text>
+            </view>
+        </button>
+        
+        <button class="mode-btn special-btn" bindtap="selectMode" data-mode="special" animation="{{specialBtnAnimation}}">
+            <view class="btn-content">
+                <text class="btn-icon">🔮</text>
+                <text>道具模式</text>
+            </view>
+        </button>
+        
+        <button class="mode-btn rank-btn" bindtap="showRanking" animation="{{rankBtnAnimation}}">
+            <view class="btn-content">
+                <text class="btn-icon">🏆</text>
+                <text>排行榜</text>
+            </view>
         </button>
     </view>
-    <view class="footer">
-        <view>
-            <button class="start-button" type="primary" size="mini" bindtap="setGame" hover-class="button-hover">{{buttionText}}</button>
+    
+    <!-- 页脚 -->
+    <view class="menu-footer">© 2025 扫雷大王 - 挑战智慧的极限</view>
+</view>
+
+<!-- 游戏界面 -->
+<view wx:elif="{{!showRanking}}" class="wrapper">
+    <!-- 返回按钮 -->
+    <button class="back-button" bindtap="backToMainMenu">
+        <text class="back-icon">‹</text> 主菜单
+    </button>
+    
+    <!-- 游戏信息 - 更清晰的布局 -->
+    <view class="header">
+        <view class="label mines-left">
+            <text class="score-icon">💣</text>
+            <text class="score-value">{{minesLeft}}</text>
+            <text class="label-text">剩余</text>
         </view>
-        <view>Switch
-            <switch bindchange="flagSwitch"/>
+        <view class="label time-elapsed">
+            <text class="score-icon">⏱️</text>
+            <text class="score-value">{{timesGo}}</text>
+            <text class="label-text">秒</text>
         </view>
     </view>
+    
+    <!-- 游戏胜利时的五彩纸屑 -->
+    <view wx:if="{{showConfetti}}" class="confetti-container">
+        <view wx:for="{{20}}" wx:key="index" class="confetti confetti-{{index}}"></view>
+    </view>
+    
+    <!-- 道具栏 - 仅在道具模式显示 -->
+    <view wx:if="{{gameMode === 'special'}}" class="items-bar">
+        <view class="items-title">可用道具</view>
+        <view class="items-list">
+            <view class="item {{activeItem === 'scanner' ? 'active' : ''}}" bindtap="selectItem" data-item="scanner">
+                <text class="item-icon">🔍</text>
+                <text class="item-count">{{items.scanner || 0}}</text>
+            </view>
+            <view class="item {{activeItem === 'shield' ? 'active' : ''}}" bindtap="selectItem" data-item="shield">
+                <text class="item-icon">🛡️</text>
+                <text class="item-count">{{items.shield || 0}}</text>
+            </view>
+            <view class="item {{activeItem === 'bomb' ? 'active' : ''}}" bindtap="selectItem" data-item="bomb">
+                <text class="item-icon">💥</text>
+                <text class="item-count">{{items.bomb || 0}}</text>
+            </view>
+        </view>
+        <view class="item-description">
+            <text>{{itemDescriptions[activeItem] || '选择一个道具使用'}}</text>
+        </view>
+    </view>
+    
+    <!-- 游戏网格 -->
+    <view class="grid-container">
+        <view 
+            wx:for="{{mineMap}}" 
+            wx:for-item="row" 
+            wx:for-index="i" 
+            wx:key="i" 
+            class="flex-container"
+            style="width: 100%; display: flex; justify-content: center;"
+        >
+            <button 
+                wx:for="{{row}}" 
+                wx:for-item="col" 
+                wx:for-index="j" 
+                wx:key="j"
+                class="flex-item {{col < 9 ? (col < 0 ? '':'open') : ((col > 9) ? 'flag' : 'mine')}} {{scannedCells[i+'-'+j] ? 'scanned' : ''}}" 
+                animation="{{cellAnimation[i][j]}}"
+                bindtap="demining" 
+                data-x="{{i}}" 
+                data-y="{{j}}" 
+                data-value="{{col}}"
+                hover-class="button-hover"
+                style="flex: 0 0 74rpx; height: 74rpx; width: 74rpx; margin: 3rpx;"
+            >
+                <!-- 爆炸地雷（bomb.png） -->
+                <block wx:if="{{col === 19}}">
+                    <view class="bomb-container">
+                        <image src="../images/bomb.png" class="bomb-icon" />
+                    </view>
+                </block>
+                <!-- 地雷图标 -->
+                <block wx:elif="{{col === 9}}">
+                    <view class="mine-container">
+                        <image src="../images/mine.png" class="mine-icon" />
+                    </view>
+                </block>
+                <!-- 旗帜图标 -->
+                <block wx:elif="{{col > 9}}">
+                    <view class="flag-container">
+                        <image src="../images/flag.png" class="flag-icon" />
+                    </view>
+                </block>
+                <!-- 扫描器效果 -->
+                <block wx:elif="{{scannedCells[i+'-'+j] && col < 0}}">
+                    <view class="num-container">
+                        <text class="num {{mineMapMapping[i][j] === 9 ? 'num-danger' : 'num-safe'}}">{{mineMapMapping[i][j] === 9 ? '!' : '?'}}</text>
+                    </view>
+                </block>
+                <!-- 其他情况显示数字 -->
+                <block wx:else>
+                    <view class="num-container">
+                        <text class="num num-{{col}}">{{col < 0 ? '' : col}}</text>
+                    </view>
+                </block>
+            </button>
+        </view>
+    </view>
+    
+    <!-- 游戏控制区 -->
+    <view class="footer">
+        <view>
+            <button class="start-button" bindtap="setGame" hover-class="button-hover">
+                <text wx:if="{{buttionText === 'START'}}">▶️ </text>
+                <text wx:else>🔄 </text>
+                {{buttionText}}
+            </button>
+        </view>
+        <view class="switch-container">
+            <text class="flag-switch-text">🚩 标记模式</text>
+            <switch bindchange="flagSwitch" color="#1e3c72"/>
+        </view>
+    </view>
+    
     <!-- 添加模式选择 -->
-<view class="mode-selector">
-    <button 
-        class="mode-btn {{gameMode === 'classic' ? 'active' : ''}}" 
-        data-mode="classic" 
-        bindtap="switchMode"
-    >经典模式</button>
-    <button 
-        class="mode-btn {{gameMode === 'timeChallenge' ? 'active' : ''}}" 
-        data-mode="timeChallenge" 
-        bindtap="switchMode"
-    >限时挑战</button>
-</view>
+    <view class="mode-selector" wx:if="{{gameMode !== 'special'}}">
+        <button 
+            class="mode-btn selector-btn {{gameMode === 'classic' ? 'active' : ''}}" 
+            data-mode="classic" 
+            bindtap="switchMode"
+        >
+            经典模式
+        </button>
+        <button 
+            class="mode-btn selector-btn {{gameMode === 'timeChallenge' ? 'active' : ''}}" 
+            data-mode="timeChallenge" 
+            bindtap="switchMode"
+        >
+            限时挑战
+        </button>
+    </view>
 
-<!-- 限时模式时间输入 -->
-<view wx:if="{{gameMode === 'timeChallenge'}}" class="time-input">
-    输入限制时间:
-    <input
-        type="number" 
-        placeholder="输入时间(秒)" 
-        value="{{timeLimit}}" 
-        bindinput="setTimeLimit"
-    />
-</view>
-
-<!-- 仅在限时模式显示时间 -->
-<view class="header">
+    <!-- 限时模式时间输入 -->
+    <view wx:if="{{gameMode === 'timeChallenge' && gameMode !== 'special'}}" class="time-input">
+        <view class="time-input-label">
+            ⏱️ 输入限制时间:
+        </view>
+        <view class="time-input-container">
+            <input
+                type="number" 
+                placeholder="输入时间(秒)" 
+                value="{{timeLimit}}" 
+                bindinput="setTimeLimit"
+                focus="{{gameMode === 'timeChallenge'}}"
+                confirm-type="done"
+            />
+            <text class="time-input-hint">输入后自动开始</text>
+        </view>
+    </view>
     
-    <text wx:if="{{gameMode === 'timeChallenge'}}" class="label my-score">剩余时间: {{timesRest}}</text>
+    <!-- 游戏提示 -->
+    <view class="tips">
+        <text class="info-icon">ℹ️</text> 
+        <block wx:if="{{gameMode === 'special'}}">
+            道具模式可使用<text class="tip-highlight">特殊道具</text>辅助扫雷。
+            <text class="tip-highlight">扫描器</text>可探测周围区域(! 表示地雷)，
+            <text class="tip-highlight">护盾</text>可保护一次踩雷，
+            <text class="tip-highlight">炸弹</text>可直接排除地雷。
+        </block>
+        <block wx:else>
+            点击空白格子揭开方块，数字表示周围的<text class="tip-highlight">地雷数量</text>。
+            打开<text class="tip-highlight">标记模式</text>可以标记可疑的地雷位置。
+            小心行事，踩到地雷游戏结束！
+        </block>
+    </view>
 </view>
 
-<view class="tips">
-    <text>- 点击 START 开始游戏，RESTART 重新开始\n- Switch 切换标志插旗</text>
-</view>
-</view>
-
-
-
-<!-- 排名界面 -->
+<!-- 排行榜页面 -->
 <view wx:else class="ranking-container">
-    <button class="back-button" bindtap="backToMainMenu">‹ 返回主菜单</button>
+    <!-- 返回按钮 -->
+    <button class="back-button" bindtap="backToMainMenu">
+        <text class="back-icon">‹</text> 主菜单
+    </button>
     
-    <!-- 选项卡 -->
+    <!-- 排行榜标题 -->
+    <view class="rank-header">
+        <text class="trophy-icon">🏆</text>
+        <text class="rank-title">2025扫雷大王</text>
+    </view>
+    
+    <!-- 排行榜选项卡 -->
     <view class="rank-tabs">
         <button 
             class="tab-btn {{currentRankTab === 'personal' ? 'active' : ''}}" 
@@ -112,28 +264,56 @@
 
     <!-- 个人排名列表 -->
     <scroll-view wx:if="{{currentRankTab === 'personal'}}" class="rank-list">
-        <!-- 修改后的个人排名项 -->
-<view wx:for="{{personalScores}}" wx:key="index" class="rank-item">
-    <text class="rank">NO.{{index + 1}}</text>
-    <text class="time">{{item.time}}秒 {{item.uploaded ? '✓' : ''}}</text>
-    <text class="date">{{item.date}}</text>
-</view>
-        <view wx:if="{{personalScores.length === 0}}" class="no-data">暂无游戏记录</view>
+        <!-- 排名表头 -->
+        <view class="rank-header-row">
+            <text class="rank-header-cell">🏆 排名</text>
+            <text class="rank-header-cell">⏱️ 用时</text>
+            <text class="rank-header-cell">📅 日期</text>
+        </view>
         
+        <!-- 修改后的个人排名项 -->
+        <view wx:for="{{personalScores}}" wx:key="index" class="rank-item">
+            <text class="rank">NO.{{index + 1}}</text>
+            <text class="time">{{item.time}}秒 <text wx:if="{{item.uploaded}}" class="verified-mark">✓</text></text>
+            <text class="date">{{item.date}}</text>
+        </view>
+        <view wx:if="{{personalScores.length === 0}}" class="no-data">
+            <image src="../images/icon/emoticon_sad.png" class="empty-icon"></image>
+            <text>暂无游戏记录</text>
+        </view>
     </scroll-view>
-    <!-- 在个人排名列表下方添加上传按钮 -->
-<view wx:if="{{currentRankTab === 'personal'}}" class="upload-section">
-  <button class="upload-btn" bindtap="showUploadDialog">上传当前最佳成绩</button>
-</view>
+    
     <!-- 好友排名列表 -->
     <scroll-view wx:else class="rank-list">
+        <!-- 排名表头 -->
+        <view class="rank-header-row">
+            <text class="rank-header-cell">🏆 排名</text>
+            <text class="rank-header-cell">👤 玩家</text>
+            <text class="rank-header-cell">⏱️ 最佳成绩</text>
+        </view>
+        
+        <!-- 好友排名项 -->
         <view wx:for="{{friendScores}}" wx:key="index" class="rank-item">
-            
-            <text class="name">{{item.name}}{{item.isSelf ? '(我)' : ''}}</text>
+            <text class="rank">NO.{{index + 1}}</text>
+            <view class="name-container">
+                <text class="name">{{item.name}}<text wx:if="{{item.isSelf}}">(我)</text></text>
+            </view>
             <text class="time">{{item.bestTime}}秒</text>
         </view>
-        <view wx:if="{{friendScores.length === 0}}" class="no-data">暂无好友数据</view>
-        
+        <view wx:if="{{friendScores.length === 0}}" class="no-data">
+            <image src="../images/icon/emoticon_sad.png" class="empty-icon"></image>
+            <text>暂无好友记录</text>
+        </view>
     </scroll-view>
+    
+    <!-- 上传成绩按钮 -->
+    <view class="upload-section">
+        <button class="upload-btn" bindtap="showUploadDialog">
+            <view class="btn-content">
+                <text class="btn-icon">🔄</text>
+                上传我的成绩
+            </view>
+        </button>
+    </view>
 </view>
 
